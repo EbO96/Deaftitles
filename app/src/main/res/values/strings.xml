@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Deaftitles</string>
+    <string name="pause">Pauza</string>
+    <string name="choose_subtitles">Wybierz napisy</string>
+    <string name="choose_moment">Wybierz moment</string>
+    <string name="moment">Moment</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="parse_error_message">Błąd podczas parsowania. Spróbuj zmienić kodowanie pliku.</string>
+</resources>

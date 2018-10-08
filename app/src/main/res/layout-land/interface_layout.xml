@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#55000000"
+    android:clickable="false"
+    android:focusable="false">
+
+    <ImageButton
+        android:id="@+id/pauseButton"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:background="@android:color/transparent"
+        android:contentDescription="@null"
+        android:src="@drawable/play_pause_button" />
+
+    <TextView
+        android:id="@+id/timeTextView"
+        android:layout_marginTop="36dp"
+        android:layout_marginStart="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:textColor="@android:color/white" />
+
+    <ImageButton
+        android:id="@+id/optionsButton"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="28dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@null"
+        android:padding="16dp"
+        android:src="@drawable/ic_more_vert_white_24dp" />
+
+</FrameLayout>
