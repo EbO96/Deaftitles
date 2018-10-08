@@ -6,6 +6,6 @@ Aplikacja na ekranie smartfona wyświetla obraz z kamery, na który nakładane s
 
 # Screenshots
 
-![alt text](Deaftitles/screenshots/Screenshot_Deaftitles_20181008-103225.png)
+![alt text](screenshots/Screenshot_Deaftitles_20181008-103225.png)
 
 
