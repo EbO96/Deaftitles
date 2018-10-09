@@ -20,7 +20,7 @@ class DeaftitlesActivity : MyActivity(), SubtitleProvider, ActivityInteraction<D
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_deaftitles)
-        
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         optionsButton?.setOnClickListener(viewModel)
