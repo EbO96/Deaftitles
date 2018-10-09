@@ -4,6 +4,10 @@ Aplikacja tworzona, aby pomóc osobom głuchoniemym.
 Wiele Polskich jak i zagranicznych filmów granych w kinach nie posiada wersji przeznaczonej dla osób głuchoniemych. Deaftitles w zamyśle ma pomóc takim osobom.
 Aplikacja na ekranie smartfona wyświetla obraz z kamery, na który nakładane są napisy i wyświetlane są w czasie rzeczywistym.
 
+# Jak zacząć?
+
+Po prostu wskaż napisy w formacie srt. Aplikacja sparsuje je i od tego momentu są gotowe do użytku.
+
 # Screenshots
 
 ![alt text](screenshots/1.png)
