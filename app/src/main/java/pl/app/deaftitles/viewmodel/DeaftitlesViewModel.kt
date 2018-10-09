@@ -57,7 +57,9 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     private var subtitleProcessor: SubtitlesProcessor? = null
 
     //Camera
-    private val camera: Fotoapparat = Fotoapparat(
+    private var camera: Fotoapparat = newCameraInstance()
+
+    fun newCameraInstance() = Fotoapparat(
             context = activityInteraction.activity(),
             view = activityInteraction.activity().cameraView,
             scaleType = ScaleType.CenterCrop,

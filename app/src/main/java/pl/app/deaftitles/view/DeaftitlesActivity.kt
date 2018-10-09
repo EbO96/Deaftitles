@@ -3,28 +3,25 @@ package pl.app.deaftitles.view
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.view.WindowManager
 import kotlinx.android.synthetic.main.activity_deaftitles.*
 import kotlinx.android.synthetic.main.interface_layout.*
-import org.koin.android.ext.android.inject
-import org.koin.core.parameter.parametersOf
 import pl.app.deaftitles.R
 import pl.app.deaftitles.model.Srt
 import pl.app.deaftitles.model.Subtitles
+import pl.app.deaftitles.parser.SubtitleParser
 import pl.app.deaftitles.processor.SubtitleProvider
 import pl.app.deaftitles.reader.SubtitlesReader
 import pl.app.deaftitles.viewmodel.DeaftitlesViewModel
 
-class DeaftitlesActivity : AppCompatActivity(), SubtitleProvider, ActivityInteraction<DeaftitlesActivity> {
-
-    private val viewModel: DeaftitlesViewModel by inject {
-        parametersOf(this@DeaftitlesActivity)
-    }
+class DeaftitlesActivity : MyActivity(), SubtitleProvider, ActivityInteraction<DeaftitlesActivity> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_deaftitles)
+        
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         optionsButton?.setOnClickListener(viewModel)
 
@@ -42,7 +39,7 @@ class DeaftitlesActivity : AppCompatActivity(), SubtitleProvider, ActivityIntera
                     data?.data?.also { uri ->
                         viewModel.parseNewSubtitles(uri)
                     }
-                }
+                } else viewModel.endParse(SubtitleParser.ParseResult.OK)
             }
 
             DeaftitlesViewModel.CHOOSE_MOMENT_CODE -> {
@@ -101,13 +98,4 @@ class DeaftitlesActivity : AppCompatActivity(), SubtitleProvider, ActivityIntera
         viewModel.resumeSubtitles()
     }
 
-    override fun onStart() {
-        super.onStart()
-        viewModel.startMoviePreview()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        viewModel.stopMoviePreview()
-    }
 }

@@ -8,4 +8,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="parse_error_message">Błąd podczas parsowania. Spróbuj zmienić kodowanie pliku.</string>
+    <string name="permissions_needed">Potrzebne uprawnienia</string>
+    <string name="camera_permissions_explanation">Aby korzystać z aplikacji musisz zezwolić na dostęp do aparatu twojego smartfona</string>
+    <string name="go_to_settings">Idź do ustawień</string>
 </resources>
