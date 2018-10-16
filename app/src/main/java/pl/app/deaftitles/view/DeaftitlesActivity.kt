@@ -7,15 +7,16 @@ import android.view.View
 import android.view.WindowManager
 import kotlinx.android.synthetic.main.activity_deaftitles.*
 import kotlinx.android.synthetic.main.interface_layout.*
+import kotlinx.coroutines.experimental.launch
 import pl.app.deaftitles.R
 import pl.app.deaftitles.model.Srt
 import pl.app.deaftitles.model.Subtitles
 import pl.app.deaftitles.parser.SubtitleParser
-import pl.app.deaftitles.processor.SubtitleProvider
 import pl.app.deaftitles.reader.SubtitlesReader
 import pl.app.deaftitles.viewmodel.DeaftitlesViewModel
 
-class DeaftitlesActivity : MyActivity(), SubtitleProvider, ActivityInteraction<DeaftitlesActivity> {
+
+class DeaftitlesActivity : MyActivity(), ActivityInteraction<DeaftitlesActivity> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,8 +28,11 @@ class DeaftitlesActivity : MyActivity(), SubtitleProvider, ActivityInteraction<D
 
         pauseButton?.setOnClickListener(viewModel)
 
-        cameraView?.setOnClickListener(viewModel)
+        cameraTextureView?.setOnClickListener(viewModel)
 
+        launch {
+            viewModel.resumeSavedMoment()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -51,18 +55,6 @@ class DeaftitlesActivity : MyActivity(), SubtitleProvider, ActivityInteraction<D
             }
         }
 
-    }
-
-    override fun onSubtitle(subtitle: String) {
-        subtitleTextView?.text = subtitle
-    }
-
-    override fun onTime(time: String) {
-        timeTextView?.text = time
-    }
-
-    override fun onPauseResume(pause: Boolean) {
-        pauseButton?.isSelected = pause
     }
 
     override fun activity(): DeaftitlesActivity = this

@@ -2,6 +2,7 @@ package pl.app.deaftitles.data.local
 
 import com.google.gson.Gson
 import pl.app.deaftitles.data.database.SubtitlesCacheDao
+import pl.app.deaftitles.model.LastSrt
 import pl.app.deaftitles.model.SrtCache
 import pl.app.deaftitles.model.Subtitles
 
@@ -26,4 +27,11 @@ class SubtitlesLocalCacheRepository(private val database: SubtitlesCacheDao) : S
         }
     }
 
+    override suspend fun insertLastMoment(srt: LastSrt) {
+        database.insertLastMoment(srt)
+    }
+
+    override suspend fun getLastMoment(): List<LastSrt> {
+        return database.getLastMoment()
+    }
 }

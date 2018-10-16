@@ -1,8 +1,10 @@
 package pl.app.deaftitles.processor
 
+import pl.app.deaftitles.model.Srt
+
 interface SubtitleProvider {
 
-    fun onSubtitle(subtitle: String)
+    fun onSubtitle(srt: Srt?)
 
     fun onTime(time: String)
 

@@ -10,10 +10,10 @@ class SubtitlesProcessor(private val activity: Activity, val subtitles: Subtitle
                          private val subtitleProvider: SubtitleProvider) {
 
     //Set movie length
-    private var movieLength = subtitles.srt.lastOrNull()?.endTime
+    val movieLength = subtitles.srt.lastOrNull()?.endTime
             ?: throw NoSubtitleException()
 
-    private var movieLengthString = movieLength.timeToString()
+    val movieLengthString = movieLength.timeToString()
 
     private var pauseTime = movieLength
 
@@ -38,7 +38,7 @@ class SubtitlesProcessor(private val activity: Activity, val subtitles: Subtitle
         countDownTimer = object : CountDownTimer(pauseTime, 200) {
 
             override fun onFinish() {
-
+                subtitleProvider.onSubtitle(null)
             }
 
             override fun onTick(t: Long) {
@@ -58,7 +58,7 @@ class SubtitlesProcessor(private val activity: Activity, val subtitles: Subtitle
                         ?.apply {
                             if (this.subtitle != lastDisplayedSubtitle) {
                                 activity.runOnUiThread {
-                                    subtitleProvider.onSubtitle(this.subtitle)
+                                    subtitleProvider.onSubtitle(this)
                                 }
                                 lastDisplayedSubtitle = this.subtitle
                             }
@@ -67,7 +67,7 @@ class SubtitlesProcessor(private val activity: Activity, val subtitles: Subtitle
                             if (lastDisplayedSubtitle != "") {
                                 lastDisplayedSubtitle = ""
                                 activity.runOnUiThread {
-                                    subtitleProvider.onSubtitle("")
+                                    subtitleProvider.onSubtitle(null)
                                 }
                             }
                         }
@@ -103,7 +103,7 @@ class SubtitlesProcessor(private val activity: Activity, val subtitles: Subtitle
 
     fun cancel() {
         subtitleProvider.apply {
-            onSubtitle("")
+            onSubtitle(null)
             onTime("")
         }
         countDownTimer?.cancel()

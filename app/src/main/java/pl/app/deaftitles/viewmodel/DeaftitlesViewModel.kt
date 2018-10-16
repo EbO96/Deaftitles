@@ -10,11 +10,9 @@ import android.support.annotation.UiThread
 import android.view.MenuItem
 import android.view.View
 import android.widget.PopupMenu
+import android.widget.SeekBar
 import android.widget.Toast
 import com.google.gson.Gson
-import io.fotoapparat.Fotoapparat
-import io.fotoapparat.parameter.ScaleType
-import io.fotoapparat.selector.back
 import kotlinx.android.synthetic.main.activity_deaftitles.*
 import kotlinx.android.synthetic.main.interface_layout.*
 import kotlinx.coroutines.experimental.DefaultDispatcher
@@ -24,14 +22,17 @@ import kotlinx.coroutines.experimental.withContext
 import pl.app.deaftitles.R
 import pl.app.deaftitles.data.SubtitleCacheRepository
 import pl.app.deaftitles.fragment.SubtitlesChooseFragment
+import pl.app.deaftitles.model.LastSrt
 import pl.app.deaftitles.model.Srt
 import pl.app.deaftitles.model.SrtCache
 import pl.app.deaftitles.model.Subtitles
 import pl.app.deaftitles.parser.SrtResult
 import pl.app.deaftitles.parser.SubtitleParser
+import pl.app.deaftitles.processor.SubtitleProvider
 import pl.app.deaftitles.processor.SubtitlesProcessor
 import pl.app.deaftitles.reader.SubtitlesReader
 import pl.app.deaftitles.utils.addFragment
+import pl.app.deaftitles.utils.timeToString
 import pl.app.deaftitles.view.ActivityInteraction
 import pl.app.deaftitles.view.DeaftitlesActivity
 import pl.app.deaftitles.view.MomentActivity
@@ -42,13 +43,15 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
         View.OnClickListener,
         PopupMenu.OnMenuItemClickListener,
         View.OnSystemUiVisibilityChangeListener,
-        SrtResult {
+        SrtResult,
+        SubtitleProvider {
 
     companion object {
         const val CHOOSE_MOMENT_CODE = 1
         const val UI_VISIBILITY_TIME = 3500L
     }
 
+    //Message displayed when something gone wrong during subtitle parsing
     private val parseErrorMessage = activityInteraction.activity().getString(R.string.parse_error_message)
 
     private var hideInterfaceTimer: CountDownTimer? = null
@@ -56,15 +59,12 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     private val subtitlesReader by lazy { SubtitlesReader() }
     private var subtitleProcessor: SubtitlesProcessor? = null
 
-    //Camera
-    private var camera: Fotoapparat = newCameraInstance()
+    private var subtitles: Subtitles? = null
 
-    fun newCameraInstance() = Fotoapparat(
-            context = activityInteraction.activity(),
-            view = activityInteraction.activity().cameraView,
-            scaleType = ScaleType.CenterCrop,
-            lensPosition = back()
-    )
+    private var seekBarPosition: Int = 0
+
+    //Last plated moment
+    private var lastPlayedMoment: LastSrt? = null
 
     //Options menu
     private val popupMenu: PopupMenu = PopupMenu(activityInteraction.activity(), activityInteraction.activity().optionsButton).apply {
@@ -82,11 +82,20 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     private val newSubtitles = MutableLiveData<ArrayList<Subtitles>>()
 
     init {
-        activityInteraction.activity().window.decorView.setOnSystemUiVisibilityChangeListener(this)
+
+        activityInteraction.activity().apply {
+
+            window.decorView.setOnSystemUiVisibilityChangeListener(this@DeaftitlesViewModel)
+
+            warningButton?.setOnClickListener {
+                showGoToSettingsDialog()
+            }
+        }
     }
 
-    @UiThread
     fun onNewSubtitles(subtitles: Subtitles) {
+
+        this@DeaftitlesViewModel.subtitles = subtitles
 
         activityInteraction.activity().apply {
 
@@ -97,7 +106,50 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
                 getCacheSubtitles()
             }
 
-            subtitleProcessor = SubtitlesProcessor(this, subtitles, this)
+            subtitleProcessor = SubtitlesProcessor(this, subtitles, this@DeaftitlesViewModel)
+
+            setMomentSeekBar()
+        }
+    }
+
+    private fun setMomentSeekBar() {
+        activityInteraction.activity().momentSeekBar.apply {
+            subtitles?.also { subtitles ->
+                max = subtitles.srt.size - 1
+                progress = 0
+
+                var srt: Srt? = null
+
+                var time: String
+
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                        if (fromUser) {
+                            srt = subtitles.srt[progress]
+                            time = "${srt?.startTime?.timeToString()} / ${subtitleProcessor?.movieLengthString}"
+                            activityInteraction.activity().timeTextView?.text = time
+                        }
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    }
+
+                    override fun onStopTrackingTouch(seekBar: SeekBar) {
+                        srt?.apply {
+                            subtitleProcessor?.jumTo(this)
+                            subtitleProcessor?.resume()
+                        }
+                    }
+
+                })
+            }
+        }
+    }
+
+    private fun updateSeekBar(srt: Srt) {
+        activityInteraction.activity().momentSeekBar?.apply {
+            seekBarPosition = subtitles?.srt?.withIndex()?.firstOrNull { srt_ -> srt_.value.startTime == srt.startTime }?.index ?: 0
+            progress = seekBarPosition
         }
     }
 
@@ -113,22 +165,12 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
         subtitleProcessor?.resume()
     }
 
-    fun startMoviePreview() {
-        pauseSubtitles()
-        camera.start()
-    }
-
-    fun stopMoviePreview() {
-        pauseSubtitles()
-        camera.stop()
-    }
-
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.pauseButton -> {
                 subtitleProcessor?.pauseResume()
             }
-            R.id.cameraView -> {
+            R.id.cameraTextureView -> {
                 if (isUiVisible) hideSystemUI()
                 else showSystemUI()
             }
@@ -227,7 +269,7 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     }
 
     /**
-     * parse new loaded srt
+     * parse new loaded lastPlayedSrt
      */
     fun parseNewSubtitles(uri: Uri) {
         val lines = subtitlesReader.readSubtitlesFromFile(activityInteraction.activity(), uri)
@@ -324,4 +366,59 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
         hideSystemUI()
     }
 
+    override fun onSubtitle(srt: Srt?) {
+
+        if (srt != null) {
+            val lastSrt = LastSrt().apply {
+                name = subtitles?.name ?: "no_subtitle"
+                pauseTime = srt.startTime
+
+                timeRemaining = ((subtitleProcessor?.movieLength) ?: srt.startTime) - srt.startTime
+            }
+
+            lastPlayedMoment = lastSrt
+        }
+
+        activityInteraction.activity().subtitleTextView?.text = srt?.subtitle ?: ""
+        if (srt != null) {
+            updateSeekBar(srt)
+        }
+    }
+
+    override fun onTime(time: String) {
+        activityInteraction.activity().timeTextView?.text = time
+    }
+
+    override fun onPauseResume(pause: Boolean) {
+        activityInteraction.activity().pauseButton?.isSelected = pause
+    }
+
+    suspend fun saveMoment() {
+        lastPlayedMoment?.apply {
+            subtitlesCacheRepository.insertLastMoment(this)
+        }
+    }
+
+    suspend fun resumeSavedMoment() {
+        val lastPlayedMoment = subtitlesCacheRepository.getLastMoment().firstOrNull()
+        if (lastPlayedMoment != null) {
+
+            subtitles = subtitlesCacheRepository.getSubtitles().firstOrNull { subtitles -> subtitles.name == lastPlayedMoment.name }
+
+            launch(UI) {
+                subtitles?.apply {
+                    onNewSubtitles(this)
+
+                    val lastPlatedSrt = subtitles?.srt?.firstOrNull { srt -> srt.startTime == lastPlayedMoment.pauseTime }
+
+                    lastPlatedSrt?.apply {
+                        jumpToMoment(this)
+                        onSubtitle(this)
+
+                        onTime("${lastPlayedMoment.timeRemaining.timeToString()} / ${subtitleProcessor?.movieLengthString}")
+                    }
+                }
+            }
+        }
+    }
 }

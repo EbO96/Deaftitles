@@ -2,9 +2,9 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:focusable="true"
+    android:layout_height="match_parent"
     android:clickable="true"
-    android:layout_height="match_parent">
+    android:focusable="true">
 
     <FrameLayout
         android:id="@+id/container"
@@ -15,8 +15,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <io.fotoapparat.view.CameraView
-            android:id="@+id/cameraView"
+        <TextureView
+            android:id="@+id/cameraTextureView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
@@ -34,6 +34,16 @@
         <include
             android:id="@+id/interfaceView"
             layout="@layout/interface_layout" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/warningButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_warning_white_24dp"
+            app:fabSize="normal" />
 
     </FrameLayout>
 </android.support.constraint.ConstraintLayout>

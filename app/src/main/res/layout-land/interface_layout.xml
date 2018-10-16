@@ -17,11 +17,11 @@
 
     <TextView
         android:id="@+id/timeTextView"
-        android:layout_marginTop="36dp"
-        android:layout_marginStart="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="36dp"
         android:textColor="@android:color/white" />
 
     <ImageButton
@@ -34,5 +34,13 @@
         android:contentDescription="@null"
         android:padding="16dp"
         android:src="@drawable/ic_more_vert_white_24dp" />
+
+    <SeekBar
+        android:padding="8dp"
+        android:id="@+id/momentSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="16dp" />
 
 </FrameLayout>

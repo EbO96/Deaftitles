@@ -11,8 +11,12 @@ import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_deaftitles.*
+import kotlinx.coroutines.experimental.launch
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
+import pl.app.deaftitles.MoviePreview
 import pl.app.deaftitles.R
 import pl.app.deaftitles.fragment.PermissionsChecker
 import pl.app.deaftitles.viewmodel.DeaftitlesViewModel
@@ -24,23 +28,25 @@ open class MyActivity : AppCompatActivity(), PermissionsChecker {
         private const val MY_PERMISSIONS_CAMERA = 0
     }
 
+    private var moviePreview: MoviePreview? = null
+        set(value) {
+            field = value
+            cameraPermissionsMessage(false)
+        }
+
     protected val viewModel: DeaftitlesViewModel by inject {
         parametersOf(this)
     }
 
     override fun check() {
 
-        if (!hasCameraPermissionsGranted()) {
-            //Ask about camera permissions
-            if (!shouldRequestForCameraPermissionRationale()) {
-                //Show user explanation
-                showGoToSettingsDialog()
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        arrayOf(Manifest.permission.CAMERA),
-                        MY_PERMISSIONS_CAMERA)
-            }
-        } else viewModel.startMoviePreview()
+        if (hasCameraPermissionsGranted()) {
+            moviePreview = MoviePreview(cameraTextureView, this@MyActivity)
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.CAMERA),
+                    MY_PERMISSIONS_CAMERA)
+        }
     }
 
     private var cameraPermissionsDialog: AlertDialog? = null
@@ -56,6 +62,7 @@ open class MyActivity : AppCompatActivity(), PermissionsChecker {
         }
     }
 
+
     /**
      * Should ask user for permission
      */
@@ -63,7 +70,7 @@ open class MyActivity : AppCompatActivity(), PermissionsChecker {
         return ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.CAMERA)
     }
 
-    private fun showGoToSettingsDialog() {
+    fun showGoToSettingsDialog() {
         if (cameraPermissionsDialog == null)
             cameraPermissionsDialog = AlertDialog.Builder(this).apply {
                 setTitle(getString(R.string.permissions_needed))
@@ -76,7 +83,9 @@ open class MyActivity : AppCompatActivity(), PermissionsChecker {
                     intent.data = uri
                     context?.startActivity(intent)
                 }
-                setNegativeButton(android.R.string.cancel, null)
+                setNegativeButton(android.R.string.cancel) { _, _ ->
+                    cameraPermissionsMessage(true)
+                }
                 setCancelable(true)
             }.create()
         if (cameraPermissionsDialog?.isShowing == false) cameraPermissionsDialog?.show()
@@ -87,35 +96,43 @@ open class MyActivity : AppCompatActivity(), PermissionsChecker {
             MY_PERMISSIONS_CAMERA -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    viewModel.newCameraInstance()
-                    viewModel.startMoviePreview()
+                    moviePreview = MoviePreview(cameraTextureView, this@MyActivity)
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    //Ask about camera permissions
+                    if (!shouldRequestForCameraPermissionRationale()) {
+                        //Show user explanation
+                        showGoToSettingsDialog()
+                    } else {
+                        cameraPermissionsMessage(true)
+                    }
                 }
                 return
-            }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
             }
         }
     }
 
+    private fun cameraPermissionsMessage(shouldShow: Boolean) {
+        if (shouldShow) warningButton.show() else warningButton.hide()
+    }
+
+    private fun String.toast() = Toast.makeText(this@MyActivity, this, Toast.LENGTH_SHORT).show()
+
     override fun onStart() {
         super.onStart()
-        viewModel.startMoviePreview()
+        check()
     }
 
     override fun onStop() {
         super.onStop()
-        viewModel.stopMoviePreview()
+        moviePreview?.onStop()
+        //Save moment in background thread
+        launch {
+            viewModel.saveMoment()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        check()
+        moviePreview?.onResume()
     }
 }

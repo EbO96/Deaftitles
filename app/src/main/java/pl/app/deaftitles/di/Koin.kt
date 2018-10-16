@@ -17,6 +17,7 @@ val cacheModule = module {
                 androidApplication().applicationContext,
                 SubtitlesCacheDatabase::class.java,
                 "srt_cache_database")
+                .fallbackToDestructiveMigration()
                 .build()
                 .srtCacheDao()
     }
