@@ -30,6 +30,10 @@ class DeaftitlesActivity : MyActivity(), ActivityInteraction<DeaftitlesActivity>
 
         cameraTextureView?.setOnClickListener(viewModel)
 
+        skipPreviousButton?.setOnClickListener(viewModel)
+
+        skipNextButton?.setOnClickListener(viewModel)
+
         launch {
             viewModel.resumeSavedMoment()
         }

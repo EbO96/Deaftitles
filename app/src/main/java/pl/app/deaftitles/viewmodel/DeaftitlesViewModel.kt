@@ -66,6 +66,9 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     //Last plated moment
     private var lastPlayedMoment: LastSrt? = null
 
+    //Last plated srt
+    private var lastPlatedSrt: Srt? = null
+
     //Options menu
     private val popupMenu: PopupMenu = PopupMenu(activityInteraction.activity(), activityInteraction.activity().optionsButton).apply {
         menuInflater.inflate(R.menu.main_menu, menu)
@@ -176,6 +179,26 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
             }
             R.id.optionsButton -> {
                 popupMenu.show()
+            }
+            R.id.skipPreviousButton -> {
+                subtitles?.apply {
+                    val previousSrtIndex = srt.indexOf(lastPlatedSrt) - 1
+                    if (previousSrtIndex != -1) {
+                        val previousSrt = srt[previousSrtIndex]
+                        jumpToMoment(previousSrt)
+                        subtitleProcessor?.pauseResume()
+                    }
+                }
+            }
+            R.id.skipNextButton -> {
+                subtitles?.apply {
+                    val nextSrtIndex = srt.indexOf(lastPlatedSrt) + 1
+                    if (nextSrtIndex < srt.size) {
+                        val nextSrt = srt[nextSrtIndex]
+                        jumpToMoment(nextSrt)
+                        subtitleProcessor?.pauseResume()
+                    }
+                }
             }
         }
     }
@@ -369,6 +392,9 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
     override fun onSubtitle(srt: Srt?) {
 
         if (srt != null) {
+
+            lastPlatedSrt = srt
+
             val lastSrt = LastSrt().apply {
                 name = subtitles?.name ?: "no_subtitle"
                 pauseTime = srt.startTime
@@ -377,10 +403,9 @@ class DeaftitlesViewModel(private val subtitlesCacheRepository: SubtitleCacheRep
             }
 
             lastPlayedMoment = lastSrt
-        }
 
-        activityInteraction.activity().subtitleTextView?.text = srt?.subtitle ?: ""
-        if (srt != null) {
+            activityInteraction.activity().subtitleTextView?.text = srt.subtitle
+
             updateSeekBar(srt)
         }
     }
